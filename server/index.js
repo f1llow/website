@@ -3,13 +3,17 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 const cors = require('cors');
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
+
 
 // Замените на свои реальные данные:
 const TELEGRAM_BOT_TOKEN = '8041409349:AAHjBVKwG0jytcEQIJAHMnOLLNQ-TZg7iIo';
 const TELEGRAM_CHAT_ID = '443538883';
 
-app.use(cors());
+app.use(cors({
+  origin: 'https://specvideo.netlify.app'
+}));
+
 app.use(express.json());
 
 const orders = []; // Пока просто в памяти. Позже можно MongoDB или SQLite.
