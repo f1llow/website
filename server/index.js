@@ -84,7 +84,7 @@ ${orderItems}
 });
 
 app.listen(PORT, () => {
-  console.log(`🟢 Сервер запущен: http://localhost:${PORT}`);
+  console.log(`🟢 Сервер запущен на порту ${PORT}`);
 });
 
 app.get('/api/stats', (req, res) => {
