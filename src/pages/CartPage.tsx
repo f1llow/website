@@ -25,11 +25,12 @@ const CartPage: React.FC = () => {
     };
 
     try {
-      const response = await fetch('http://localhost:3001/api/order', {
+      const response = await fetch('https://website-p8d7.onrender.com', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData),
       });
+      
 
       const result = await response.json();
 
