@@ -30,9 +30,9 @@ const Header: React.FC = () => {
         {/* Top bar with contacts and search */}
         <div className="py-2 border-b border-gray-100 hidden md:flex items-center justify-between">
           <div className="flex items-center space-x-6">
-            <a href="tel:+74951234567" className="flex items-center text-sm text-gray-600 hover:text-[#990000] transition-colors">
+            <a href="tel:+79064434332" className="flex items-center text-sm text-gray-600 hover:text-[#990000] transition-colors">
               <Phone size={16} className="mr-1" />
-              <span>+7 (495) 123-45-67</span>
+              <span>+7 (906) 443-43-32</span>
             </a>
             <span className="text-sm text-gray-600">Пн-Пт: 9:00-18:00</span>
           </div>
@@ -154,9 +154,9 @@ const Header: React.FC = () => {
                 Контакты
               </Link>
               <div className="pt-2 border-t border-gray-100">
-                <a href="tel:+74951234567" className="flex items-center py-2 text-gray-700">
+                <a href="tel:+79064434332" className="flex items-center py-2 text-gray-700">
                   <Phone size={18} className="mr-2" />
-                  <span>+7 (495) 123-45-67</span>
+                  <span>+7 (906) 443-43-32</span>
                 </a>
                 <p className="text-sm text-gray-600">Пн-Пт: 9:00-18:00</p>
               </div>

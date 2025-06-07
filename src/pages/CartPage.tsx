@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { Trash2, Plus, Minus, ShoppingCart, AlertTriangle } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingCart } from 'lucide-react';
 
 const CartPage: React.FC = () => {
   const { cart, removeFromCart, updateQuantity, getCartTotal, clearCart } = useCart();
@@ -11,58 +11,41 @@ const CartPage: React.FC = () => {
   const [address, setAddress] = useState('');
   const [comment, setComment] = useState('');
   const [formSubmitted, setFormSubmitted] = useState(false);
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
-    const token = '8041409349:AAHjBVKwG0jytcEQIJAHMnOLLNQ-TZg7iIo'; // Вставь сюда токен Telegram-бота
-    const chatId = '443538883'; // Твой Telegram chat_id
-    const orderItems = cart.map(item => 
-      `• ${item.product.name} x${item.quantity} — ${item.product.price.toLocaleString()}₽`
-    ).join('\n');
-  
-    const message = `
-  🛒 *Новый заказ!*
-  
-  👤 Имя: ${name}
-  📞 Телефон: ${phone}
-  📧 Email: ${email || 'не указано'}
-  🏠 Адрес: ${address}
-  💬 Комментарий: ${comment || 'нет'}
-  
-  📦 Заказ:
-  ${orderItems}
-  
-  💰 Итого: ${getCartTotal().toLocaleString()} ₽
-    `;
-  
+
+    const orderData = {
+      name,
+      phone,
+      email,
+      address,
+      comment,
+      cart,
+    };
+
     try {
-      const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      const response = await fetch('http://localhost:3001/api/order', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: message,
-          parse_mode: 'Markdown'
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData),
       });
-  
-      if (response.ok) {
+
+      const result = await response.json();
+
+      if (result.success) {
         setFormSubmitted(true);
         clearCart();
       } else {
-        console.error('Ошибка при отправке в Telegram');
+        console.error('Ошибка при обработке на сервере');
         alert('Ошибка при отправке заказа. Попробуйте позже.');
       }
     } catch (error) {
-      console.error('Ошибка:', error);
+      console.error('Ошибка соединения с сервером:', error);
       alert('Произошла ошибка при оформлении заказа.');
     }
   };
-  
-  
+
   if (formSubmitted) {
     return (
       <div className="bg-gray-50 py-12">
@@ -75,7 +58,7 @@ const CartPage: React.FC = () => {
             <p className="text-gray-600 mb-6">
               Ваш заказ успешно оформлен. Наш менеджер свяжется с вами в ближайшее время для подтверждения.
             </p>
-            <Link 
+            <Link
               to="/"
               className="inline-block px-6 py-3 bg-[#0F2C59] hover:bg-[#183e75] text-white font-medium rounded-lg transition-colors"
             >
@@ -86,22 +69,20 @@ const CartPage: React.FC = () => {
       </div>
     );
   }
-  
+
   if (cart.length === 0) {
     return (
       <div className="bg-gray-50 py-12">
         <div className="container mx-auto px-4">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-8">Корзина</h1>
-          
+
           <div className="bg-white rounded-lg shadow-sm p-8 text-center">
             <div className="w-20 h-20 mx-auto mb-4 text-gray-300">
               <ShoppingCart size={80} strokeWidth={1} />
             </div>
             <h2 className="text-xl font-semibold mb-2">Ваша корзина пуста</h2>
-            <p className="text-gray-600 mb-6">
-              Добавьте товары в корзину, чтобы оформить заказ
-            </p>
-            <Link 
+            <p className="text-gray-600 mb-6">Добавьте товары в корзину, чтобы оформить заказ</p>
+            <Link
               to="/catalog"
               className="inline-block px-6 py-3 bg-[#0F2C59] hover:bg-[#183e75] text-white font-medium rounded-lg transition-colors"
             >
@@ -112,54 +93,53 @@ const CartPage: React.FC = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="bg-gray-50 py-8 md:py-12">
       <div className="container mx-auto px-4">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-8">Корзина</h1>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Cart items */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-4">
               <div className="p-4 border-b border-gray-100 flex items-center justify-between">
                 <h2 className="font-semibold">Товары в корзине</h2>
-                <button 
+                <button
                   onClick={clearCart}
                   className="text-sm text-gray-500 hover:text-[#990000] transition-colors"
                 >
                   Очистить корзину
                 </button>
               </div>
-              
+
               <div>
-                {cart.map(item => {
-                  const discountedPrice = item.product.discount 
-                    ? Math.round(item.product.price * (1 - item.product.discount / 100)) 
+                {cart.map((item) => {
+                  const discountedPrice = item.product.discount
+                    ? Math.round(item.product.price * (1 - item.product.discount / 100))
                     : item.product.price;
-                  
+
                   return (
                     <div key={item.product.id} className="p-4 border-b border-gray-100 last:border-b-0">
                       <div className="flex items-center">
                         <div className="w-20 h-20 rounded bg-gray-100 overflow-hidden mr-4">
-                          <img 
-                            src={item.product.images[0]} 
+                          <img
+                            src={item.product.images[0]}
                             alt={item.product.name}
                             className="w-full h-full object-cover"
                           />
                         </div>
-                        
+
                         <div className="flex-grow">
-                          <Link 
+                          <Link
                             to={`/product/${item.product.id}`}
                             className="font-medium text-gray-800 hover:text-[#0F2C59] transition-colors"
                           >
                             {item.product.name}
                           </Link>
-                          
+
                           <div className="flex flex-wrap justify-between items-center mt-2">
                             <div className="flex items-center mr-4 mb-2 sm:mb-0">
-                              <button 
+                              <button
                                 onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
                                 className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-[#0F2C59] border border-gray-300 rounded-l"
                                 disabled={item.quantity <= 1}
@@ -169,14 +149,14 @@ const CartPage: React.FC = () => {
                               <div className="w-10 h-8 flex items-center justify-center border-t border-b border-gray-300">
                                 {item.quantity}
                               </div>
-                              <button 
+                              <button
                                 onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
                                 className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-[#0F2C59] border border-gray-300 rounded-r"
                               >
                                 <Plus size={16} />
                               </button>
                             </div>
-                            
+
                             <div className="flex items-center">
                               {item.product.discount ? (
                                 <div className="flex items-baseline gap-2">
@@ -192,8 +172,8 @@ const CartPage: React.FC = () => {
                                   {item.product.price.toLocaleString()} ₽
                                 </span>
                               )}
-                              
-                              <button 
+
+                              <button
                                 onClick={() => removeFromCart(item.product.id)}
                                 className="ml-4 text-gray-400 hover:text-[#990000] transition-colors"
                               >
@@ -208,9 +188,9 @@ const CartPage: React.FC = () => {
                 })}
               </div>
             </div>
-            
+
             <div className="flex justify-between items-center">
-              <Link 
+              <Link
                 to="/catalog"
                 className="text-[#0F2C59] hover:text-[#990000] transition-colors flex items-center"
               >
@@ -219,8 +199,7 @@ const CartPage: React.FC = () => {
               </Link>
             </div>
           </div>
-          
-          {/* Order summary and form */}
+
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
               <h3 className="font-semibold mb-4">Итого</h3>
@@ -241,7 +220,7 @@ const CartPage: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white rounded-lg shadow-sm p-4">
               <h3 className="font-semibold mb-4">Оформление заказа</h3>
               <form onSubmit={handleSubmit}>
@@ -250,8 +229,8 @@ const CartPage: React.FC = () => {
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                       Имя*
                     </label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       id="name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
@@ -260,13 +239,13 @@ const CartPage: React.FC = () => {
                       placeholder="Иван Иванов"
                     />
                   </div>
-                  
+
                   <div>
                     <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
                       Телефон*
                     </label>
-                    <input 
-                      type="tel" 
+                    <input
+                      type="tel"
                       id="phone"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
@@ -275,13 +254,13 @@ const CartPage: React.FC = () => {
                       placeholder="+7 (123) 456-7890"
                     />
                   </div>
-                  
+
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                       Email
                     </label>
-                    <input 
-                      type="email" 
+                    <input
+                      type="email"
                       id="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -289,12 +268,12 @@ const CartPage: React.FC = () => {
                       placeholder="example@mail.ru"
                     />
                   </div>
-                  
+
                   <div>
                     <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
                       Адрес доставки*
                     </label>
-                    <textarea 
+                    <textarea
                       id="address"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
@@ -304,12 +283,12 @@ const CartPage: React.FC = () => {
                       rows={2}
                     ></textarea>
                   </div>
-                  
+
                   <div>
                     <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-1">
                       Комментарий к заказу
                     </label>
-                    <textarea 
+                    <textarea
                       id="comment"
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
@@ -318,9 +297,9 @@ const CartPage: React.FC = () => {
                       rows={3}
                     ></textarea>
                   </div>
-                  
+
                   <div className="pt-2">
-                    <button 
+                    <button
                       type="submit"
                       className="w-full py-3 bg-[#0F2C59] hover:bg-[#183e75] text-white font-medium rounded-lg transition-colors"
                     >
@@ -340,18 +319,17 @@ const CartPage: React.FC = () => {
   );
 };
 
-// Adding Check icon for the success state
-const Check = ({ size = 24, className = "" }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
+const Check = ({ size = 24, className = '' }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
     className={className}
   >
     <polyline points="20 6 9 17 4 12"></polyline>

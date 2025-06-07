@@ -14,9 +14,9 @@ const Footer: React.FC = () => {
               Ваш надежный партнер в области систем видеонаблюдения и безопасности.
             </p>
             <div className="space-y-2">
-              <a href="tel:+74951234567" className="flex items-center text-gray-300 hover:text-white transition-colors">
+              <a href="tel:+79064434332" className="flex items-center text-gray-300 hover:text-white transition-colors">
                 <Phone size={16} className="mr-2" />
-                <span>+7 (495) 123-45-67</span>
+                <span>+7 (906) 443-43-32</span>
               </a>
               <a href="mailto:info@spetsvideo.ru" className="flex items-center text-gray-300 hover:text-white transition-colors">
                 <Mail size={16} className="mr-2" />
