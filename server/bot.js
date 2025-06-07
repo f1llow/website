@@ -27,7 +27,10 @@ bot.on('message', async (msg) => {
 
  if (text === '📊 Статистика') {
   try {
-    const response = await fetch('http://localhost:3001/api/stats');
+    const API_URL = 'https://website-p8d7.onrender.com'; // твой адрес
+
+	const response = await fetch(`${API_URL}/api/stats`);
+
     const stats = await response.json();
 
     const reply = `📊 *Статистика заказов:*\n
