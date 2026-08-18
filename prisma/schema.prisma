@@ -13,3 +13,27 @@ model Post {
   content   String?
   createdAt DateTime @default(now())
 }
+
+model Order {
+  id        Int         @id @default(autoincrement())
+  name      String
+  phone     String
+  email     String?
+  address   String
+  comment   String?
+  total     Int
+  createdAt DateTime    @default(now())
+  items     OrderItem[]
+}
+
+model OrderItem {
+  id         Int    @id @default(autoincrement())
+  orderId    Int
+  productId  String
+  productName String
+  price      Int
+  quantity   Int
+  order      Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
