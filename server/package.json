@@ -4,7 +4,8 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "prisma generate --schema ../prisma/schema.prisma && node index.js",
+    "db:deploy": "prisma migrate deploy --schema ../prisma/schema.prisma"
   },
   "engines": {
     "node": ">=20"
