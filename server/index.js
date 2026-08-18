@@ -39,9 +39,10 @@ const requiredString = (value, field, maxLength = 500) => {
 };
 
 const optionalString = (value, maxLength = 1000) => {
-  if (value == null || value === '') return null;
+  if (value == null) return null;
   if (typeof value !== 'string' || value.length > maxLength) return null;
-  return value.trim();
+  const trimmed = value.trim();
+  return trimmed || null;
 };
 
 app.get('/api/health', async (req, res) => {
@@ -77,12 +78,7 @@ app.post('/api/order', async (req, res) => {
       }
 
       const price = Math.round(product.price * (1 - product.discount / 100));
-      return {
-        productId,
-        productName: product.name,
-        price,
-        quantity
-      };
+      return { productId, productName: product.name, price, quantity };
     });
 
     const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -142,7 +138,7 @@ app.post('/api/order', async (req, res) => {
     }
   } catch (error) {
     console.error('Order creation failed:', error);
-    res.status(400).json({ success: false, message: 'Не удалось оформить заказ' });
+    res.status(500).json({ success: false, message: 'Не удалось оформить заказ' });
   }
 });
 
