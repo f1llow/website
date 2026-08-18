@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { Trash2, Plus, Minus, ShoppingCart } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://website-p8d7.onrender.com';
+
 const CartPage: React.FC = () => {
   const { cart, removeFromCart, updateQuantity, getCartTotal, clearCart } = useCart();
   const [name, setName] = useState('');
@@ -11,9 +13,13 @@ const CartPage: React.FC = () => {
   const [address, setAddress] = useState('');
   const [comment, setComment] = useState('');
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting || cart.length === 0) return;
+
+    setIsSubmitting(true);
 
     const orderData = {
       name,
@@ -25,26 +31,25 @@ const CartPage: React.FC = () => {
     };
 
     try {
-      const response = await fetch('https://website-p8d7.onrender.com/api/order', {
+      const response = await fetch(`${API_URL}/api/order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData),
       });
-      
-      
 
       const result = await response.json();
 
-      if (result.success) {
-        setFormSubmitted(true);
-        clearCart();
-      } else {
-        console.error('Ошибка при обработке на сервере');
-        alert('Ошибка при отправке заказа. Попробуйте позже.');
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Ошибка при обработке заказа');
       }
+
+      setFormSubmitted(true);
+      clearCart();
     } catch (error) {
-      console.error('Ошибка соединения с сервером:', error);
-      alert('Произошла ошибка при оформлении заказа.');
+      console.error('Ошибка при оформлении заказа:', error);
+      alert('Ошибка при оформлении заказа. Попробуйте позже.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -228,84 +233,33 @@ const CartPage: React.FC = () => {
               <form onSubmit={handleSubmit}>
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                      Имя*
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0F2C59] focus:border-[#0F2C59]"
-                      placeholder="Иван Иванов"
-                    />
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Имя*</label>
+                    <input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0F2C59] focus:border-[#0F2C59]" placeholder="Иван Иванов" />
                   </div>
 
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                      Телефон*
-                    </label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0F2C59] focus:border-[#0F2C59]"
-                      placeholder="+7 (123) 456-7890"
-                    />
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Телефон*</label>
+                    <input type="tel" id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0F2C59] focus:border-[#0F2C59]" placeholder="+7 (123) 456-7890" />
                   </div>
 
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0F2C59] focus:border-[#0F2C59]"
-                      placeholder="example@mail.ru"
-                    />
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0F2C59] focus:border-[#0F2C59]" placeholder="example@mail.ru" />
                   </div>
 
                   <div>
-                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                      Адрес доставки*
-                    </label>
-                    <textarea
-                      id="address"
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0F2C59] focus:border-[#0F2C59]"
-                      placeholder="Город, улица, дом, квартира"
-                      rows={2}
-                    ></textarea>
+                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">Адрес доставки*</label>
+                    <textarea id="address" value={address} onChange={(e) => setAddress(e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0F2C59] focus:border-[#0F2C59]" placeholder="Город, улица, дом, квартира" rows={2}></textarea>
                   </div>
 
                   <div>
-                    <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-1">
-                      Комментарий к заказу
-                    </label>
-                    <textarea
-                      id="comment"
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0F2C59] focus:border-[#0F2C59]"
-                      placeholder="Дополнительная информация по заказу"
-                      rows={3}
-                    ></textarea>
+                    <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-1">Комментарий к заказу</label>
+                    <textarea id="comment" value={comment} onChange={(e) => setComment(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0F2C59] focus:border-[#0F2C59]" placeholder="Дополнительная информация по заказу" rows={3}></textarea>
                   </div>
 
                   <div className="pt-2">
-                    <button
-                      type="submit"
-                      className="w-full py-3 bg-[#0F2C59] hover:bg-[#183e75] text-white font-medium rounded-lg transition-colors"
-                    >
-                      Оформить заказ
+                    <button disabled={isSubmitting} type="submit" className="w-full py-3 bg-[#0F2C59] hover:bg-[#183e75] disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors">
+                      {isSubmitting ? 'Отправка...' : 'Оформить заказ'}
                     </button>
                     <p className="mt-2 text-xs text-gray-500 text-center">
                       Нажимая на кнопку, вы соглашаетесь с условиями обработки персональных данных
@@ -322,18 +276,7 @@ const CartPage: React.FC = () => {
 };
 
 const Check = ({ size = 24, className = '' }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <polyline points="20 6 9 17 4 12"></polyline>
   </svg>
 );
