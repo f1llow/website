@@ -49,6 +49,14 @@ prisma/              # база данных, schema и миграции
 npm install
 ```
 
+Для frontend можно указать адрес backend в `.env`:
+
+```env
+VITE_API_URL=http://localhost:3001
+```
+
+Если переменную не указывать, используется мой backend на Render.
+
 Запустить frontend:
 
 ```bash
