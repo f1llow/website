@@ -11,6 +11,19 @@ const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const ADMIN_STATS_TOKEN = process.env.ADMIN_STATS_TOKEN;
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'https://specvideo.netlify.app';
 
+const PRODUCTS = {
+  '1': { name: 'IP-камера HiWatch DS-I400(D) (2.8 мм)', price: 6899, discount: 0 },
+  '2': { name: 'IP-камера Tiandy TC-C34XN I3W/E/Y/2.8mm/V4.2', price: 3599, discount: 0 },
+  '3': { name: 'Аналоговая камера HiWatch DS-T133 (2.8 mm)', price: 4500, discount: 0 },
+  '4': { name: 'Внешнее хранилище Wisenet SRB-160S', price: 25000, discount: 0 },
+  '6': { name: 'IP-камера Xiaomi Smart Camera C200', price: 9800, discount: 15 },
+  '7': { name: 'Кабель ORIENT CVAP-30', price: 699, discount: 0 },
+  '8': { name: 'Блок питания ORIENT SAP-2405', price: 1299, discount: 0 },
+  '9': { name: 'Блок питания Rexant 34-0495', price: 1799, discount: 0 },
+  '10': { name: 'Кабель Rexant 01-4014', price: 8399, discount: 0 },
+  '11': { name: 'Аналоговая камера Falcon Eye FE-MHD-BP2e-20', price: 2100, discount: 0 }
+};
+
 app.disable('x-powered-by');
 app.use(cors({ origin: FRONTEND_ORIGIN }));
 app.use(express.json({ limit: '100kb' }));
@@ -44,7 +57,6 @@ app.get('/api/health', async (req, res) => {
 app.post('/api/order', async (req, res) => {
   try {
     const { name, phone, email, address, comment, cart } = req.body;
-
     const customerName = requiredString(name, 'name', 100);
     const customerPhone = requiredString(phone, 'phone', 50);
     const customerAddress = requiredString(address, 'address', 500);
@@ -56,23 +68,19 @@ app.post('/api/order', async (req, res) => {
     }
 
     const items = cart.map((item) => {
-      const product = item?.product;
+      const productId = String(item?.productId ?? item?.product?.id ?? '');
       const quantity = Number(item?.quantity);
-      const price = Number(product?.price);
-      const discount = Number(product?.discount || 0);
+      const product = PRODUCTS[productId];
 
-      if (!product?.name || !Number.isSafeInteger(quantity) || quantity < 1 || quantity > 999) {
+      if (!product || !Number.isSafeInteger(quantity) || quantity < 1 || quantity > 999) {
         throw new Error('Invalid cart item');
       }
-      if (!Number.isFinite(price) || price < 0 || !Number.isFinite(discount) || discount < 0 || discount > 100) {
-        throw new Error('Invalid product price');
-      }
 
-      const finalPrice = Math.round(price * (1 - discount / 100));
+      const price = Math.round(product.price * (1 - product.discount / 100));
       return {
-        productId: String(product.id ?? product.name).slice(0, 100),
-        productName: String(product.name).slice(0, 300),
-        price: finalPrice,
+        productId,
+        productName: product.name,
+        price,
         quantity
       };
     });
@@ -88,8 +96,7 @@ app.post('/api/order', async (req, res) => {
         comment: customerComment,
         total,
         items: { create: items }
-      },
-      include: { items: true }
+      }
     });
 
     if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
@@ -118,14 +125,11 @@ app.post('/api/order', async (req, res) => {
     ].join('\n');
 
     try {
-      const telegramResponse = await fetch(
-        `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message })
-        }
-      );
+      const telegramResponse = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message })
+      });
 
       if (!telegramResponse.ok) {
         throw new Error(`Telegram API returned ${telegramResponse.status}`);
@@ -163,7 +167,6 @@ app.get('/api/stats', async (req, res) => {
     ]);
 
     const totalRevenue = revenue._sum.total || 0;
-
     res.json({
       totalOrders,
       totalRevenue,
@@ -176,11 +179,6 @@ app.get('/api/stats', async (req, res) => {
     console.error('Stats error:', error);
     res.status(500).json({ message: 'Не удалось получить статистику' });
   }
-});
-
-app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ message: 'Внутренняя ошибка сервера' });
 });
 
 const server = app.listen(PORT, () => {
