@@ -43,35 +43,38 @@ prisma/              # база данных, schema и миграции
 
 ## Запуск
 
-Установить зависимости:
+### Frontend
+
+Установить зависимости из корня проекта:
 
 ```bash
 npm install
 ```
 
-Для frontend можно указать адрес backend в `.env`:
+При необходимости можно указать адрес backend в `.env`:
 
 ```env
 VITE_API_URL=http://localhost:3001
 ```
 
-Если переменную не указывать, используется мой backend на Render.
+Если переменная не указана, frontend использует настроенный адрес backend.
 
-Запустить frontend:
+Запустить:
 
 ```bash
 npm run dev
 ```
 
-Backend запускается отдельно:
+### Backend
+
+Перейти в папку сервера и установить зависимости:
 
 ```bash
 cd server
 npm install
-node index.js
 ```
 
-Для backend нужны переменные окружения:
+Создать файл `.env`:
 
 ```env
 PORT=3001
@@ -82,11 +85,17 @@ ADMIN_STATS_TOKEN="..."
 FRONTEND_ORIGIN="http://localhost:5173"
 ```
 
-Применить миграции Prisma:
+Применить миграции и сгенерировать Prisma Client:
 
 ```bash
-npx prisma migrate deploy
-npx prisma generate
+npx prisma migrate deploy --schema ../prisma/schema.prisma
+npx prisma generate --schema ../prisma/schema.prisma
+```
+
+Запустить сервер:
+
+```bash
+node index.js
 ```
 
 ## Зачем этот проект
